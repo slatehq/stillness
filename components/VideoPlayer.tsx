@@ -14,6 +14,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, autoPlay = fa
   return (
     <div className="w-full aspect-video bg-black rounded-b-3xl md:rounded-3xl overflow-hidden shadow-lg relative z-10">
       <iframe
+        key={videoId} // Unique key forces remount, preventing iframe src change from adding to browser history
         src={src}
         title={title}
         className="w-full h-full"

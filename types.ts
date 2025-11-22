@@ -26,8 +26,3 @@ export interface ShortFilm {
   youtube_video_id: string;
   description: string;
 }
-
-export type ViewState = 
-  | { type: 'HOME', tab: 'SERIES' | 'SHORTS' | 'WHY' }
-  | { type: 'SERIES_DETAIL', seriesId: string }
-  | { type: 'SHORT_DETAIL', filmId: string };

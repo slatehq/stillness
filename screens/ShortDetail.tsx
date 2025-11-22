@@ -1,20 +1,35 @@
-import React from 'react';
+
+import React, { useMemo } from 'react';
 import { ChevronLeft } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ShortFilm } from '../types';
 import { VideoPlayer } from '../components/VideoPlayer';
 
 interface ShortDetailProps {
-  film: ShortFilm;
-  onBack: () => void;
+  shortsList: ShortFilm[];
 }
 
-export const ShortDetail: React.FC<ShortDetailProps> = ({ film, onBack }) => {
+export const ShortDetail: React.FC<ShortDetailProps> = ({ shortsList }) => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  
+  const film = useMemo(() => shortsList.find(s => s.id === id), [shortsList, id]);
+
+  if (!film) {
+    return (
+       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400">
+          <p>Film not found.</p>
+          <button onClick={() => navigate('/', { replace: true })} className="mt-4 text-teal-400 underline">Go Home</button>
+       </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-950">
       {/* Sticky Header */}
       <div className="sticky top-0 z-20 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800 px-4 py-3 flex items-center shadow-sm">
         <button 
-          onClick={onBack}
+          onClick={() => navigate('/?tab=SHORTS', { replace: true })}
           className="p-2 -ml-2 text-slate-400 hover:bg-slate-800 rounded-full transition-colors"
         >
           <ChevronLeft className="w-6 h-6" />

@@ -1,21 +1,27 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, Play, Clock } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Series, Episode } from '../types';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { supabase } from '../lib/supabase';
 
 interface SeriesDetailProps {
-  series: Series;
-  onBack: () => void;
+  seriesList: Series[];
 }
 
-export const SeriesDetail: React.FC<SeriesDetailProps> = ({ series, onBack }) => {
+export const SeriesDetail: React.FC<SeriesDetailProps> = ({ seriesList }) => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const series = useMemo(() => seriesList.find(s => s.id === id), [seriesList, id]);
 
   // Fetch episodes for this series
   useEffect(() => {
+    if (!series) return;
+
     const fetchEpisodes = async () => {
       setLoading(true);
       try {
@@ -39,7 +45,7 @@ export const SeriesDetail: React.FC<SeriesDetailProps> = ({ series, onBack }) =>
     };
 
     fetchEpisodes();
-  }, [series.id]);
+  }, [series]);
 
   // Get unique seasons
   const seasons = useMemo(() => 
@@ -56,21 +62,27 @@ export const SeriesDetail: React.FC<SeriesDetailProps> = ({ series, onBack }) =>
   }, [seasons, activeSeason]);
 
   // Active episode logic
-  // Default to first episode of the active season
   const episodesInSeason = useMemo(() => 
     episodes.filter(e => e.season_number === activeSeason).sort((a, b) => a.episode_number - b.episode_number),
   [episodes, activeSeason]);
 
   const [activeEpisode, setActiveEpisode] = useState<Episode | null>(null);
 
-  // Effect to set initial episode when season changes or component mounts
+  // Effect to set initial episode when season changes
   useEffect(() => {
     if (episodesInSeason.length > 0) {
-       // Only set if no active episode or if active episode is not in current season list (though usually we just want first of season)
-       // Let's default to first in season when switching seasons
        setActiveEpisode(episodesInSeason[0]);
     }
-  }, [activeSeason, episodesInSeason]); // Depend on episodesInSeason reference changing
+  }, [activeSeason, episodesInSeason]);
+
+  if (!series) {
+    return (
+       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400">
+          <p>Series not found.</p>
+          <button onClick={() => navigate('/', { replace: true })} className="mt-4 text-teal-400 underline">Go Home</button>
+       </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -84,7 +96,7 @@ export const SeriesDetail: React.FC<SeriesDetailProps> = ({ series, onBack }) =>
     return (
       <div className="flex flex-col min-h-screen bg-slate-950">
          <div className="sticky top-0 z-20 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800 px-4 py-3 flex items-center shadow-sm">
-            <button onClick={onBack} className="p-2 -ml-2 text-slate-400 hover:bg-slate-800 rounded-full"><ChevronLeft className="w-6 h-6" /></button>
+            <button onClick={() => navigate('/?tab=SERIES', { replace: true })} className="p-2 -ml-2 text-slate-400 hover:bg-slate-800 rounded-full"><ChevronLeft className="w-6 h-6" /></button>
          </div>
          <div className="p-8 text-center text-slate-400">No episodes found.</div>
       </div>
@@ -96,7 +108,7 @@ export const SeriesDetail: React.FC<SeriesDetailProps> = ({ series, onBack }) =>
       {/* Sticky Header with Back Button */}
       <div className="sticky top-0 z-20 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800 px-4 py-3 flex items-center shadow-sm">
         <button 
-          onClick={onBack}
+          onClick={() => navigate('/?tab=SERIES', { replace: true })}
           className="p-2 -ml-2 text-slate-400 hover:bg-slate-800 rounded-full transition-colors"
         >
           <ChevronLeft className="w-6 h-6" />
